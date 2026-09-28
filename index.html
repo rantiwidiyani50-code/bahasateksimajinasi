@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Game TTS Teks Imajinatif Kelas IX</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        },
+                        accent: {
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Fredoka', 'cursive'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .font-display {
+            font-family: 'Fredoka', cursive;
+        }
+
+        /* Custom Crossword Grid styling */
+        .tts-grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 2px;
+            background-color: #cbd5e1;
+            padding: 4px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .tts-cell {
+            aspect-ratio: 1 / 1;
+            position: relative;
+            background-color: #ffffff;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            text-transform: uppercase;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+
+        .tts-cell.blocked {
+            background-color: #1e293b;
+        }
+
+        .tts-cell.selected {
+            background-color: #fef08a !important;
+            box-shadow: inset 0 0 0 2px #eab308;
+        }
+
+        .tts-cell.highlighted {
+            background-color: #e0f2fe;
+        }
+
+        .tts-cell.correct {
+            background-color: #dcfce7 !important;
+            color: #15803d;
+        }
+
+        .tts-cell.incorrect {
+            background-color: #fee2e2 !important;
+            color: #b91c1c;
+        }
+
+        .tts-cell-num {
+            position: absolute;
+            top: 1px;
+            left: 2px;
+            font-size: 0.55rem;
+            line-height: 1;
+            font-weight: 800;
+            color: #475569;
+            pointer-events: none;
+        }
+
+        .tts-input-cell {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #0f172a;
+            background: transparent;
+            border: none;
+            outline: none;
+            text-transform: uppercase;
+            padding: 0;
+            margin: 0;
+        }
+
+        @media (min-width: 640px) {
+            .tts-cell-num {
+                font-size: 0.65rem;
+                top: 2px;
+                left: 3px;
+            }
+            .tts-input-cell {
+                font-size: 1.3rem;
+            }
+        }
+
+        /* Scrollbar custom styles */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col justify-between antialiased">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center font-display text-xl font-bold shadow-md shadow-sky-200">
+                    <i class="fa-solid fa-puzzle-piece"></i>
+                </div>
+                <div>
+                    <h1 class="font-display font-bold text-lg md:text-xl text-slate-900 leading-tight">TTS TEKS IMAJINATIF</h1>
+                    <p class="text-xs text-sky-600 font-semibold">Bahasa Indonesia Kelas IX SMP/MTs</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons header -->
+            <div class="flex items-center space-x-2">
+                <button id="btnDocs" onclick="openDocsModal()" class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold transition border border-emerald-200">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Baca Materi</span>
+                </button>
+                <button onclick="openTeacherModal()" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm transition font-medium" title="Panel Guru">
+                    <i class="fa-solid fa-user-tie md:mr-1"></i>
+                    <span class="hidden md:inline text-xs">Panel Guru</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-6xl mx-auto px-2 sm:px-4 py-4 w-full flex-grow">
+
+        <!-- VIEW 1: START SCREEN -->
+        <section id="startScreen" class="max-w-2xl mx-auto my-4 bg-white rounded-2xl shadow-xl border border-slate-200 p-6 md:p-8">
+            <div class="text-center mb-6">
+                <span class="inline-block px-3 py-1 bg-sky-100 text-sky-700 font-bold text-xs rounded-full uppercase tracking-wider mb-2">Media Pembelajaran Interaktif</span>
+                <h2 class="font-display text-2xl md:text-3xl font-bold text-slate-900">Uji Pemahaman Teks Imajinatif</h2>
+                <p class="text-slate-600 text-sm mt-1">Selesaikan 20 Soal Teka-Teki Silang (10 Mendatar & 10 Menurun) secara cermat!</p>
+            </div>
+
+            <form id="startForm" onsubmit="startGame(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nama Lengkap Siswa</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" id="studentName" required placeholder="Contoh: Ahmad Rizky" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none transition">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Kelas</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fa-solid fa-graduation-cap"></i></span>
+                            <input type="text" id="studentClass" required placeholder="IX A / IX B" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none transition">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nomor Absen</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fa-solid fa-hashtag"></i></span>
+                            <input type="number" id="studentAbsen" required min="1" max="50" placeholder="01" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none transition">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Rules Box -->
+                <div class="bg-sky-50 border border-sky-200 rounded-xl p-4 text-xs text-sky-900 space-y-1.5">
+                    <p class="font-bold text-sky-800 flex items-center"><i class="fa-solid fa-circle-info mr-1.5 text-sky-600"></i> Petunjuk Permainan:</p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-700">
+                        <li>Pilih kotak pada papan TTS atau klik nomor soal untuk membaca petunjuk.</li>
+                        <li>Ketik huruf langsung dari keyboard HP atau laptop.</li>
+                        <li>Tekan tombol <b>Periksa Jawaban</b> jika telah menyelesaikan seluruh isian.</li>
+                    </ul>
+                </div>
+
+                <div class="pt-2 flex flex-col sm:flex-row gap-3">
+                    <button type="submit" class="w-full py-3.5 px-6 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl shadow-lg shadow-sky-200 hover:shadow-sky-300 transition duration-150 flex items-center justify-center space-x-2 text-base">
+                        <span>Mulai Permainan</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <button type="button" onclick="openDocsModal()" class="sm:w-auto py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span>Materi</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- VIEW 2: GAMEPLAY SCREEN -->
+        <section id="gameScreen" class="hidden space-y-4">
+            
+            <!-- Top Game Info Toolbar -->
+            <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center space-x-3 text-xs sm:text-sm">
+                    <div class="bg-sky-50 text-sky-800 px-3 py-1.5 rounded-lg border border-sky-200 font-semibold flex items-center">
+                        <i class="fa-solid fa-user-graduate mr-1.5 text-sky-600"></i>
+                        <span id="displayStudentInfo">Ahmad Rizky (IX A)</span>
+                    </div>
+                    <div class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg font-medium flex items-center">
+                        <i class="fa-solid fa-pen-to-square mr-1.5 text-slate-500"></i>
+                        <span>Progress: <strong id="progressText" class="text-sky-700">0/20</strong></span>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <div id="timerContainer" class="bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-lg font-mono font-bold text-sm flex items-center">
+                        <i class="fa-regular fa-clock mr-1.5 text-amber-600"></i>
+                        <span id="timerDisplay">00:00</span>
+                    </div>
+                    <button onclick="checkAnswers()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs sm:text-sm transition shadow-md shadow-emerald-200 flex items-center space-x-1.5">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Periksa Jawaban</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Clue Card Display -->
+            <div id="activeClueCard" class="bg-sky-600 text-white p-4 rounded-xl shadow-md transition-all">
+                <div class="flex items-center justify-between mb-1">
+                    <span id="clueBadge" class="bg-sky-800 text-sky-100 font-bold text-xs px-2.5 py-0.5 rounded-md uppercase tracking-wider">
+                        Soal #1 Mendatar
+                    </span>
+                    <span id="clueLength" class="text-xs text-sky-200 font-medium">9 Huruf</span>
+                </div>
+                <p id="clueText" class="text-sm md:text-base font-semibold leading-relaxed">
+                    Klik atau pilih salah satu kotak angka pada papan TTS untuk melihat petunjuk pertanyaan.
+                </p>
+            </div>
+
+            <!-- Grid & Clues Split View -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                
+                <!-- Left Column: TTS Grid Canvas -->
+                <div class="lg:col-span-7 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center">
+                    <div class="w-full max-w-[500px]">
+                        <div id="ttsGridContainer" class="tts-grid">
+                            <!-- Cells rendered dynamically via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Onscreen Keyboard Controls for Mobile -->
+                    <div class="mt-4 w-full flex items-center justify-between gap-2 sm:hidden">
+                        <button onclick="moveSelection('PREV')" class="flex-1 py-2 bg-slate-200 hover:bg-slate-300 rounded-lg font-bold text-xs text-slate-700">
+                            <i class="fa-solid fa-arrow-left mr-1"></i> Sebelum
+                        </button>
+                        <button onclick="clearCurrentCell()" class="py-2 px-4 bg-rose-100 hover:bg-rose-200 rounded-lg font-bold text-xs text-rose-700">
+                            <i class="fa-solid fa-eraser"></i> Hapus
+                        </button>
+                        <button onclick="moveSelection('NEXT')" class="flex-1 py-2 bg-slate-200 hover:bg-slate-300 rounded-lg font-bold text-xs text-slate-700">
+                            Lanjut <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Column: Clue Lists (Mendatar & Menurun) -->
+                <div class="lg:col-span-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-3 max-h-[520px] overflow-y-auto pr-1">
+                    
+                    <!-- Mendatar Panel -->
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="font-display font-bold text-slate-900 text-sm border-b border-slate-100 pb-2 mb-2 flex items-center text-sky-700">
+                            <i class="fa-solid fa-arrows-left-right mr-2"></i> MENDATAR (10 Soal)
+                        </h3>
+                        <div id="listAcross" class="space-y-1.5 text-xs">
+                            <!-- Rendered dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Menurun Panel -->
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="font-display font-bold text-slate-900 text-sm border-b border-slate-100 pb-2 mb-2 flex items-center text-amber-700">
+                            <i class="fa-solid fa-arrows-up-down mr-2"></i> MENURUN (10 Soal)
+                        </h3>
+                        <div id="listDown" class="space-y-1.5 text-xs">
+                            <!-- Rendered dynamically -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: RESULTS SCREEN / MODAL -->
+        <section id="resultModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+                <div class="text-center mb-6">
+                    <div id="scoreBadgeIcon" class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-3xl mb-3 shadow-inner">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <h2 class="font-display font-bold text-2xl text-slate-900">Hasil Evaluasi TTS</h2>
+                    <p id="resultCategory" class="text-sm font-semibold text-sky-600 mt-1">Sangat Baik</p>
+                </div>
+
+                <!-- Score Card Display -->
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 mb-6 space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <span class="text-xs text-slate-500 font-bold uppercase">Skor Akhir</span>
+                        <span id="resultScore" class="font-display font-bold text-3xl text-sky-600">100 / 100</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-100">
+                            <span class="text-slate-400 block">Jawaban Benar</span>
+                            <strong id="resultCorrect" class="text-emerald-600 text-base font-bold">20 Soal</strong>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-100">
+                            <span class="text-slate-400 block">Jawaban Salah</span>
+                            <strong id="resultWrong" class="text-rose-600 text-base font-bold">0 Soal</strong>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-100">
+                            <span class="text-slate-400 block">Waktu Pengerjaan</span>
+                            <strong id="resultTime" class="text-slate-700 text-base font-bold">03:45</strong>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-100">
+                            <span class="text-slate-400 block">Persentase</span>
+                            <strong id="resultPercentage" class="text-sky-600 text-base font-bold">100%</strong>
+                        </div>
+                    </div>
+
+                    <!-- Motivational Message Box -->
+                    <div class="pt-2 border-t border-slate-200">
+                        <p id="resultMotivation" class="text-xs text-slate-600 italic text-center">
+                            "Luar biasa! Kamu memahami seluruh konsep materi Teks Imajinatif dengan sangat sempurna!"
+                        </p>
+                    </div>
+                </div>
+
+                <div id="cloudStatus" class="hidden mb-4 p-2.5 bg-sky-50 border border-sky-200 rounded-lg text-xs text-sky-800 text-center font-medium">
+                    <i class="fa-solid fa-spinner fa-spin mr-1"></i> Mengirim hasil ke Google Sheets Guru...
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3">
+                    <button onclick="retryGame()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> Coba Lagi
+                    </button>
+                    <button onclick="closeResultModal()" class="flex-1 py-3 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-sm transition shadow-md shadow-sky-200">
+                        Selesai <i class="fa-solid fa-check ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 4: TEACHER PANEL MODAL -->
+        <section id="teacherModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-user-shield text-sky-600 text-xl"></i>
+                        <h2 class="font-display font-bold text-xl text-slate-900">Panel Pengaturan & Kunci Jawaban Guru</h2>
+                    </div>
+                    <button onclick="closeTeacherModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Teacher Password Gate (if not authenticated) -->
+                <div id="teacherAuthGate" class="space-y-4 py-4">
+                    <p class="text-xs text-slate-600">Masukkan PIN/Kata Sandi Guru untuk membuka panel administrator (Default Password: <strong>guru123</strong>).</p>
+                    <div class="flex gap-2">
+                        <input type="password" id="teacherPinInput" placeholder="Sandi Guru" class="flex-1 px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <button onclick="verifyTeacherPin()" class="px-5 py-2 bg-sky-600 text-white font-bold rounded-xl text-sm hover:bg-sky-700 transition">
+                            Masuk
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Teacher Content (Hidden until unlocked) -->
+                <div id="teacherContent" class="hidden space-y-6">
+                    
+                    <!-- Tab Buttons -->
+                    <div class="flex border-b border-slate-200 text-xs font-bold gap-2">
+                        <button onclick="switchTeacherTab('key')" id="tabBtnKey" class="py-2 px-3 border-b-2 border-sky-600 text-sky-600">Kunci Jawaban</button>
+                        <button onclick="switchTeacherTab('config')" id="tabBtnConfig" class="py-2 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700">Pengaturan URL & Timer</button>
+                    </div>
+
+                    <!-- Tab 1: Answer Key -->
+                    <div id="teacherTabKey" class="space-y-4">
+                        <p class="text-xs text-slate-600">Tabel Kunci Jawaban Lengkap 20 Soal Teks Imajinatif Kelas IX:</p>
+                        <div class="overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="w-full text-xs text-left">
+                                <thead class="bg-slate-100 font-bold text-slate-700 border-b border-slate-200">
+                                    <tr>
+                                        <th class="p-2.5">No</th>
+                                        <th class="p-2.5">Arah</th>
+                                        <th class="p-2.5">Pertanyaan</th>
+                                        <th class="p-2.5">Jawaban</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teacherKeyTableBody" class="divide-y divide-slate-100">
+                                    <!-- Filled via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Settings -->
+                    <div id="teacherTabConfig" class="hidden space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Google Apps Script Web App URL (Google Sheets Integration)</label>
+                            <input type="url" id="cfgScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-sky-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Google Docs URL (Link Materi Pembelajaran)</label>
+                            <input type="url" id="cfgDocsUrl" placeholder="https://docs.google.com/document/d/..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-sky-500">
+                        </div>
+
+                        <div class="flex items-center space-x-2 pt-2">
+                            <input type="checkbox" id="cfgEnableTimer" class="rounded text-sky-600 focus:ring-sky-500 h-4 w-4">
+                            <label for="cfgEnableTimer" class="text-xs font-semibold text-slate-700">Aktifkan Hitung Waktu / Timer dalam Permainan</label>
+                        </div>
+
+                        <button onclick="saveTeacherConfig()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition">
+                            Simpan Pengaturan
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Google Docs Link View Modal -->
+        <section id="docsModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl">
+                <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+                <h3 class="font-display font-bold text-xl text-slate-900">Materi Teks Imajinatif</h3>
+                <p class="text-xs text-slate-600">Pelajari ringkasan materi struktur, unsur intrinsik, dan kaidah kebahasaan melalui Google Docs resmi.</p>
+                
+                <div class="pt-2 flex flex-col gap-2">
+                    <a id="btnOpenDocsUrl" href="#" target="_blank" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center space-x-2">
+                        <span>📖 Buka Ringkasan Materi</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </a>
+                    <button onclick="closeDocsModal()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-500 mt-auto">
+        <p>© Media Pembelajaran Interaktif Bahasa Indonesia Kelas IX | Kurikulum Merdeka</p>
+    </footer>
+
+    <script>
+        /* CONFIGURATION CONSTANTS */
+        let GOOGLE_SCRIPT_URL = "MASUKKAN_URL_GOOGLE_APPS_SCRIPT_DI_SINI";
+        let GOOGLE_DOCS_URL = "https://docs.google.com/document/d/1exampleTextImajinatifGrade9/edit";
+        let ENABLE_TIMER = true;
+
+        /* CROSSWORD DATA ENGINE (12x12 GRID Matrix) */
+        const GRID_SIZE = 12;
+
+        const WORDS_DATA = [
+            // MENDATAR (10 Soal)
+            { id: 'M1', num: 1, dir: 'across', row: 0, col: 0, answer: 'ORIENTASI', clue: 'Tahap awal pengenalan tokoh, latar, dan situasi awal cerita imajinatif.' },
+            { id: 'M2', num: 2, dir: 'across', row: 2, col: 1, answer: 'KOMPLIKASI', clue: 'Bagian struktur cerita tempat berawalnya pemicu hingga timbulnya konflik utama.' },
+            { id: 'M3', num: 3, dir: 'across', row: 4, col: 4, answer: 'FIKSI', clue: 'Karya rekaan atau khayalan yang tidak berdasarkan kejadian nyata secara harfiah.' },
+            { id: 'M4', num: 4, dir: 'across', row: 6, col: 4, answer: 'KLIMAKS', clue: 'Titik puncak ketegangan atau peristiwa paling menentukan dalam alur cerita.' },
+            { id: 'M5', num: 5, dir: 'across', row: 8, col: 1, answer: 'AMANAT', clue: 'Pesan moral atau ajaran kebaikan yang ingin disampaikan pengarang kepada pembaca.' },
+            { id: 'M6', num: 6, dir: 'across', row: 10, col: 0, answer: 'LATAR', clue: 'Unsur intrinsik yang menjelaskan tempat, waktu, dan suasana terjadinya peristiwa.' },
+            { id: 'M7', num: 7, dir: 'across', row: 1, col: 6, answer: 'TEMA', clue: 'Ide pokok atau gagasan mendasar yang menjadi landasan utama pembuatan cerita.' },
+            { id: 'M8', num: 8, dir: 'across', row: 3, col: 6, answer: 'MAJAS', clue: 'Gaya bahasa indah yang digunakan untuk menghidupkan dan memperkuat imajinasi cerita.' },
+            { id: 'M9', num: 9, dir: 'across', row: 5, col: 6, answer: 'KONFLIK', clue: 'Pertentangan atau perselisihan antar-tokoh yang menjadi inti penggerak cerita.' },
+            { id: 'M10', num: 10, dir: 'across', row: 7, col: 6, answer: 'RESOLUSI', clue: 'Tahap penyelesaian masalah atau pemecahan konflik dalam cerita imajinatif.' },
+
+            // MENURUN (10 Soal)
+            { id: 'D1', num: 1, dir: 'down', row: 0, col: 8, answer: 'IMAJINASI', clue: 'Daya pikir manusia untuk membayangkan atau menciptakan gambaran khayalan.' },
+            { id: 'D2', num: 2, dir: 'down', row: 2, col: 1, answer: 'KODA', clue: 'Bagian akhir cerita imajinatif yang berisi ungkapan penutup atau simpulan moral.' },
+            { id: 'D3', num: 3, dir: 'down', row: 0, col: 2, answer: 'ALUR', clue: 'Jalinan atau urutan peristiwa yang membentuk jalannya cerita dari awal hingga akhir.' },
+            { id: 'D4', num: 4, dir: 'down', row: 4, col: 4, answer: 'FABEL', clue: 'Cerita imajinatif dengan tokoh hewan yang berperilaku dan berbicara seperti manusia.' },
+            { id: 'D5', num: 5, dir: 'down', row: 0, col: 4, answer: 'NARRATIF', clue: 'Bentuk pengungkapan fiktif atau pengisahan rangkaian peristiwa.' },
+            { id: 'D6', num: 6, dir: 'down', row: 6, col: 6, answer: 'TOKOH', clue: 'Pelaku atau individu yang mengalami peristiwa dan berperan dalam teks imajinatif.' },
+            { id: 'D7', num: 7, dir: 'down', row: 0, col: 6, answer: 'PROTAGONIS', clue: 'Tokoh utama yang umumnya berwatak baik, terpuji, dan didukung pembaca.' },
+            { id: 'D8', num: 8, dir: 'down', row: 3, col: 10, answer: 'SINOPSIS', clue: 'Ringkasan singkat isi cerita yang menggambarkan garis besar jalan cerita.' },
+            { id: 'D9', num: 9, dir: 'down', row: 8, col: 2, answer: 'ANTAGONIS', clue: 'Tokoh penentang tokoh utama yang memiliki sifat jahat atau memicu konflik.' },
+            { id: 'D10', num: 10, dir: 'down', row: 6, col: 0, answer: 'FANTASI', clue: 'Hal yang berhubungan dengan daya khayal murni atau hal ajaib di luar kebiasaan.' }
+        ];
+
+        /* STATE MANAGEMENT */
+        let studentProfile = { name: '', class: '', absen: '' };
+        let activeWord = null;
+        let activeCellPos = { r: 0, c: 0 };
+        let timerInterval = null;
+        let secondsElapsed = 0;
+        let isGameFinished = false;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initCrosswordGrid();
+            renderClueLists();
+            populateTeacherKeyTable();
+        });
+
+        /* Start Game Event Handler */
+        function startGame(e) {
+            e.preventDefault();
+            studentProfile.name = document.getElementById('studentName').value.trim();
+            studentProfile.class = document.getElementById('studentClass').value.trim();
+            studentProfile.absen = document.getElementById('studentAbsen').value.trim();
+
+            document.getElementById('displayStudentInfo').innerText = `${studentProfile.name} (${studentProfile.class} / Absen: ${studentProfile.absen})`;
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+
+            if (ENABLE_TIMER) {
+                startTimer();
+            } else {
+                document.getElementById('timerContainer').classList.add('hidden');
+            }
+
+            // Select first clue by default
+            selectWord(WORDS_DATA[0]);
+        }
+
+        function initCrosswordGrid() {
+            const container = document.getElementById('ttsGridContainer');
+            container.innerHTML = '';
+
+            // Build grid map of valid cells and number labels
+            let cellMap = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null));
+
+            WORDS_DATA.forEach(word => {
+                let r = word.row;
+                let c = word.col;
+                for (let i = 0; i < word.answer.length; i++) {
+                    if (!cellMap[r][c]) {
+                        cellMap[r][c] = { letter: word.answer[i], num: null, words: [] };
+                    }
+                    cellMap[r][c].words.push(word.id);
+                    if (i === 0) {
+                        cellMap[r][c].num = word.num;
+                    }
+
+                    if (word.dir === 'across') c++;
+                    else r++;
+                }
+            });
+
+            // Render 12x12 Grid DOM
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cellData = cellMap[r][c];
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = `tts-cell ${cellData ? '' : 'blocked'}`;
+                    cellDiv.dataset.row = r;
+                    cellDiv.dataset.col = c;
+
+                    if (cellData) {
+                        if (cellData.num) {
+                            const numSpan = document.createElement('span');
+                            numSpan.className = 'tts-cell-num';
+                            numSpan.innerText = cellData.num;
+                            cellDiv.appendChild(numSpan);
+                        }
+
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.maxLength = 1;
+                        input.className = 'tts-input-cell';
+                        input.dataset.row = r;
+                        input.dataset.col = c;
+
+                        input.addEventListener('focus', () => handleCellFocus(r, c));
+                        input.addEventListener('keydown', (e) => handleKeyNavigation(e, r, c));
+                        input.addEventListener('input', (e) => handleCellInput(e, r, c));
+
+                        cellDiv.appendChild(input);
+                    }
+
+                    container.appendChild(cellDiv);
+                }
+            }
+        }
+
+        function renderClueLists() {
+            const listAcross = document.getElementById('listAcross');
+            const listDown = document.getElementById('listDown');
+            listAcross.innerHTML = '';
+            listDown.innerHTML = '';
+
+            WORDS_DATA.forEach(word => {
+                const item = document.createElement('div');
+                item.className = 'p-2 rounded-lg bg-slate-50 hover:bg-sky-50 border border-slate-200 cursor-pointer transition flex items-start space-x-2';
+                item.onclick = () => selectWord(word);
+                item.id = `clue-item-${word.id}`;
+
+                item.innerHTML = `
+                    <span class="font-bold text-sky-700 min-w-[24px]">${word.num}.</span>
+                    <span class="text-slate-700 leading-snug">${word.clue} <em class="text-slate-400 font-normal">(${word.answer.length} huruf)</em></span>
+                `;
+
+                if (word.dir === 'across') listAcross.appendChild(item);
+                else listDown.appendChild(item);
+            });
+        }
+
+        /* Select Word and highlight on grid */
+        function selectWord(word) {
+            activeWord = word;
+            
+            // Highlight active clue card
+            document.getElementById('clueBadge').innerText = `Soal #${word.num} ${word.dir === 'across' ? 'Mendatar' : 'Menurun'}`;
+            document.getElementById('clueLength').innerText = `${word.answer.length} Huruf`;
+            document.getElementById('clueText').innerText = word.clue;
+
+            // Update clue list selection state
+            document.querySelectorAll('[id^="clue-item-"]').forEach(el => el.classList.remove('bg-sky-100', 'border-sky-300'));
+            const activeItem = document.getElementById(`clue-item-${word.id}`);
+            if (activeItem) activeItem.classList.add('bg-sky-100', 'border-sky-300');
+
+            // Highlight grid cells
+            highlightWordCells(word);
+
+            // Focus first input of word
+            activeCellPos = { r: word.row, c: word.col };
+            focusCell(word.row, word.col);
+        }
+
+        function highlightWordCells(word) {
+            document.querySelectorAll('.tts-cell').forEach(el => el.classList.remove('selected', 'highlighted'));
+
+            let r = word.row;
+            let c = word.col;
+            for (let i = 0; i < word.answer.length; i++) {
+                const cell = document.querySelector(`.tts-cell[data-row="${r}"][data-col="${c}"]`);
+                if (cell) cell.classList.add('highlighted');
+                if (word.dir === 'across') c++;
+                else r++;
+            }
+        }
+
+        function focusCell(r, c) {
+            const input = document.querySelector(`input.tts-input-cell[data-row="${r}"][data-col="${c}"]`);
+            if (input) {
+                input.focus();
+                const cell = input.closest('.tts-cell');
+                if (cell) cell.classList.add('selected');
+            }
+        }
+
+        function handleCellFocus(r, c) {
+            activeCellPos = { r, c };
+            document.querySelectorAll('.tts-cell').forEach(el => el.classList.remove('selected'));
+            const cell = document.querySelector(`.tts-cell[data-row="${r}"][data-col="${c}"]`);
+            if (cell) cell.classList.add('selected');
+        }
+
+        function handleCellInput(e, r, c) {
+            const val = e.target.value.toUpperCase();
+            e.target.value = val;
+
+            updateProgressCount();
+
+            if (val.length === 1) {
+                moveSelection('NEXT');
+            }
+        }
+
+        function handleKeyNavigation(e, r, c) {
+            if (e.key === 'Backspace' && !e.target.value) {
+                moveSelection('PREV');
+            } else if (e.key === 'ArrowRight') {
+                focusCell(r, c + 1);
+            } else if (e.key === 'ArrowLeft') {
+                focusCell(r, c - 1);
+            } else if (e.key === 'ArrowDown') {
+                focusCell(r + 1, c);
+            } else if (e.key === 'ArrowUp') {
+                focusCell(r - 1, c);
+            }
+        }
+
+        function moveSelection(direction) {
+            if (!activeWord) return;
+
+            let { r, c } = activeCellPos;
+            if (direction === 'NEXT') {
+                if (activeWord.dir === 'across') c++;
+                else r++;
+            } else if (direction === 'PREV') {
+                if (activeWord.dir === 'across') c--;
+                else r--;
+            }
+
+            focusCell(r, c);
+        }
+
+        function clearCurrentCell() {
+            const input = document.querySelector(`input.tts-input-cell[data-row="${activeCellPos.r}"][data-col="${activeCellPos.c}"]`);
+            if (input) {
+                input.value = '';
+                updateProgressCount();
+            }
+        }
+
+        function updateProgressCount() {
+            let filledCount = 0;
+            WORDS_DATA.forEach(word => {
+                let r = word.row;
+                let c = word.col;
+                let wordFilled = true;
+                for (let i = 0; i < word.answer.length; i++) {
+                    const input = document.querySelector(`input.tts-input-cell[data-row="${r}"][data-col="${c}"]`);
+                    if (!input || !input.value) {
+                        wordFilled = false;
+                        break;
+                    }
+                    if (word.dir === 'across') c++;
+                    else r++;
+                }
+                if (wordFilled) filledCount++;
+            });
+
+            document.getElementById('progressText').innerText = `${filledCount}/20`;
+        }
+
+        function startTimer() {
+            secondsElapsed = 0;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+                const secs = String(secondsElapsed % 60).padStart(2, '0');
+                document.getElementById('timerDisplay').innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function checkAnswers() {
+            let correctCount = 0;
+            let wrongCount = 0;
+
+            WORDS_DATA.forEach(word => {
+                let r = word.row;
+                let c = word.col;
+                let userWord = '';
+
+                for (let i = 0; i < word.answer.length; i++) {
+                    const input = document.querySelector(`input.tts-input-cell[data-row="${r}"][data-col="${c}"]`);
+                    userWord += input ? (input.value.toUpperCase() || ' ') : ' ';
+                    if (word.dir === 'across') c++;
+                    else r++;
+                }
+
+                const isCorrect = (userWord === word.answer);
+                if (isCorrect) correctCount++;
+                else wrongCount++;
+
+                // Mark visual cues on cells
+                r = word.row;
+                c = word.col;
+                for (let i = 0; i < word.answer.length; i++) {
+                    const cell = document.querySelector(`.tts-cell[data-row="${r}"][data-col="${c}"]`);
+                    if (cell) {
+                        if (isCorrect) {
+                            cell.classList.add('correct');
+                            cell.classList.remove('incorrect');
+                        } else if (userWord.trim().length === word.answer.length) {
+                            cell.classList.add('incorrect');
+                        }
+                    }
+                    if (word.dir === 'across') c++;
+                    else r++;
+                }
+            });
+
+            const score = Math.round((correctCount / WORDS_DATA.length) * 100);
+            const percentage = score;
+            const timeStr = document.getElementById('timerDisplay').innerText;
+
+            let category = 'Perlu Belajar Lagi';
+            let motivation = 'Jangan berkecil hati, pelajari kembali materi Teks Imajinatif dan coba lagi!';
+            
+            if (score >= 90) {
+                category = 'Sangat Baik';
+                motivation = 'Luar biasa! Pemahamanmu mengenai Teks Imajinatif sudah sangat matang dan sempurna!';
+            } else if (score >= 80) {
+                category = 'Baik';
+                motivation = 'Hasil yang sangat bagus! Kamu sudah menguasai sebagian besar materi Teks Imajinatif.';
+            } else if (score >= 70) {
+                category = 'Cukup';
+                motivation = 'Cukup baik! Buka kembali materi pada tombol Google Docs untuk memperdalam konsep.';
+            }
+
+            // Display Results Modal
+            document.getElementById('resultScore').innerText = `${score} / 100`;
+            document.getElementById('resultCategory').innerText = category;
+            document.getElementById('resultCorrect').innerText = `${correctCount} Soal`;
+            document.getElementById('resultWrong').innerText = `${wrongCount} Soal`;
+            document.getElementById('resultTime').innerText = timeStr;
+            document.getElementById('resultPercentage').innerText = `${percentage}%`;
+            document.getElementById('resultMotivation').innerText = `"${motivation}"`;
+
+            document.getElementById('resultModal').classList.remove('hidden');
+
+            // Send payload to Google Sheets Apps Script if configured
+            if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.startsWith('http')) {
+                sendDataToGoogleSheets({
+                    nama: studentProfile.name,
+                    kelas: studentProfile.class,
+                    noAbsen: studentProfile.absen,
+                    benar: correctCount,
+                    salah: wrongCount,
+                    skor: score,
+                    persentase: percentage,
+                    waktu: timeStr
+                });
+            }
+        }
+
+        function sendDataToGoogleSheets(payload) {
+            const statusDiv = document.getElementById('cloudStatus');
+            statusDiv.classList.remove('hidden');
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                statusDiv.innerHTML = '<i class="fa-solid fa-check-circle text-emerald-600 mr-1"></i> Hasil berhasil terikirim ke Google Sheets Guru!';
+            }).catch(err => {
+                statusDiv.innerHTML = '<i class="fa-solid fa-exclamation-triangle text-amber-600 mr-1"></i> Gagal terhubung ke Google Sheets.';
+            });
+        }
+
+        function retryGame() {
+            document.getElementById('resultModal').classList.add('hidden');
+            document.querySelectorAll('input.tts-input-cell').forEach(inp => {
+                inp.value = '';
+            });
+            document.querySelectorAll('.tts-cell').forEach(cell => {
+                cell.classList.remove('correct', 'incorrect', 'selected', 'highlighted');
+            });
+            updateProgressCount();
+            if (ENABLE_TIMER) startTimer();
+        }
+
+        function closeResultModal() {
+            document.getElementById('resultModal').classList.add('hidden');
+        }
+
+        function openTeacherModal() {
+            document.getElementById('teacherModal').classList.remove('hidden');
+        }
+
+        function closeTeacherModal() {
+            document.getElementById('teacherModal').classList.add('hidden');
+        }
+
+        function verifyTeacherPin() {
+            const pin = document.getElementById('teacherPinInput').value;
+            if (pin === 'guru123') {
+                document.getElementById('teacherAuthGate').classList.add('hidden');
+                document.getElementById('teacherContent').classList.remove('hidden');
+            } else {
+                alert('Kata sandi guru salah. Silakan coba lagi.');
+            }
+        }
+
+        function switchTeacherTab(tab) {
+            if (tab === 'key') {
+                document.getElementById('teacherTabKey').classList.remove('hidden');
+                document.getElementById('teacherTabConfig').classList.add('hidden');
+                document.getElementById('tabBtnKey').className = 'py-2 px-3 border-b-2 border-sky-600 text-sky-600 font-bold';
+                document.getElementById('tabBtnConfig').className = 'py-2 px-3 border-b-2 border-transparent text-slate-500 font-bold';
+            } else {
+                document.getElementById('teacherTabKey').classList.add('hidden');
+                document.getElementById('teacherTabConfig').classList.remove('hidden');
+                document.getElementById('tabBtnKey').className = 'py-2 px-3 border-b-2 border-transparent text-slate-500 font-bold';
+                document.getElementById('tabBtnConfig').className = 'py-2 px-3 border-b-2 border-sky-600 text-sky-600 font-bold';
+            }
+        }
+
+        function populateTeacherKeyTable() {
+            const tbody = document.getElementById('teacherKeyTableBody');
+            tbody.innerHTML = '';
+            WORDS_DATA.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2.5 font-bold">${item.num}</td>
+                    <td class="p-2.5 capitalize">${item.dir === 'across' ? 'Mendatar' : 'Menurun'}</td>
+                    <td class="p-2.5 text-slate-600">${item.clue}</td>
+                    <td class="p-2.5 font-bold text-emerald-700 font-mono">${item.answer}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function saveTeacherConfig() {
+            GOOGLE_SCRIPT_URL = document.getElementById('cfgScriptUrl').value.trim();
+            GOOGLE_DOCS_URL = document.getElementById('cfgDocsUrl').value.trim();
+            ENABLE_TIMER = document.getElementById('cfgEnableTimer').checked;
+
+            alert('Pengaturan berhasil disimpan!');
+            closeTeacherModal();
+        }
+
+        function openDocsModal() {
+            document.getElementById('btnOpenDocsUrl').href = GOOGLE_DOCS_URL;
+            document.getElementById('docsModal').classList.remove('hidden');
+        }
+
+        function closeDocsModal() {
+            document.getElementById('docsModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
